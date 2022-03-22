@@ -39,14 +39,14 @@ async def main():
     print(channel_url, counter)
     async for message_obj in client.iter_messages(channel, offset_date=date, reverse=True):
       if(message_obj.message):
-        # clear message from '(', ')', '-'
-        cleared_message = re.sub(r'[(|)|-]', '', message_obj.message)
+        # clear message from '(', ')', '-', '.', '-'
+        cleared_message = re.sub(r'[(|)|-|.|-]', '', message_obj.message)
         
         phone_numbers = re.findall(r'\+1.*\d', cleared_message)
         hashtags = re.findall(r'(#+[а-яА-Я0-9(_)]{1,})', cleared_message)
       
         phone_numbers = ' '.join(list(map(lambda phone: phone.replace(" ", ""), phone_numbers)))
-        if(phone_numbers and not any(x in hashtags for x in config.bad_hashtags)):
+        if(phone_numbers and not any(x in hashtags for x in config.bad_hashtags) and phone_numbers not in config.used_numbers):
           # print(phone_numbers, message_obj.date)
           list_of_hashtags.append(hashtags)
           list_of_messages_link.append(f'{channel_url}/{message_obj.id}')
