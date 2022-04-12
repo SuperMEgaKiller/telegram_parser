@@ -19,6 +19,7 @@ async def main():
 
     df = pd.read_csv("data.csv", names=columns)
     df.drop(df.index, inplace=True)
+  # move to object
     list_of_hashtags = []
     list_of_numbers = []
     list_of_messages = []
@@ -34,48 +35,39 @@ async def main():
             continue
 
         counter = counter + 1
-        no_number_counter = 0
         print(channel_url, counter)
         async for message_obj in client.iter_messages(channel,
                                                       offset_date=date,
                                                       reverse=True):
             if (message_obj.message):
-                no_number_counter = no_number_counter + 1
-                # clear message from '(', ')', '-', '.',
-                cleared_message = re.sub(r'[(|)|\-|.]', '',
+                # clear message from '(', ')', '-', '.', '+1'
+                cleared_message = re.sub(r'[()\-.]|\+1', '',
                                          message_obj.message)
+                # remove spaces
                 no_space_message = cleared_message.replace(" ", "")
 
                 # numbers with +1
-                phone_numbers = re.findall(r'\+1.*\d', cleared_message)
-                # 10 digit numbers
-                any_number = re.findall(r'\d{10}', no_space_message)
+                # phone_numbers = re.findall(r'\+1.*\d', cleared_message)
+              
+                # find 10 digits ( probably numbers )
+                any_numbers = re.findall(r'\d{10}', no_space_message)
                 hashtags = re.findall(r'(#+[а-яА-Я0-9(_)]{1,})',
                                       cleared_message)
+                # add +1 to begining
+                modified_numbers = [f'+1{s}' for s in any_numbers]
 
-                # \d{10}
-                # check if theres any numbers
-                # any_numbers = re.findall(r'^(?:\D*\d){10,}\D*$', cleared_message)
-
-                phone_numbers = ' '.join(
-                    list(
-                        map(lambda phone: phone.replace(" ", ""),
-                            phone_numbers)))
-                if (phone_numbers
-                        and not any(x in hashtags for x in config.bad_hashtags)
-                        and phone_numbers not in config.used_numbers):
-                    # print(phone_numbers, message_obj.date)
+                # print("modified_numbers", modified_numbers)
+              
+                unique_numbers = list(set(modified_numbers) - set(config.used_numbers))
+              
+                unique_numbers = ' '.join(modified_numbers)
+              
+                if (unique_numbers
+                        and not any(x in hashtags for x in config.bad_hashtags)):
                     list_of_hashtags.append(hashtags)
                     list_of_messages_link.append(
                         f'{channel_url}/{message_obj.id}')
-                    list_of_numbers.append(phone_numbers)
-                    list_of_messages.append(cleared_message)
-                elif (not phone_numbers and any_number
-                      and not any(x in hashtags for x in config.bad_hashtags)):
-                    list_of_hashtags.append(hashtags)
-                    list_of_messages_link.append(
-                        f'{channel_url}/{message_obj.id}')
-                    list_of_numbers.append(' '.join(any_number))
+                    list_of_numbers.append(unique_numbers)
                     list_of_messages.append(cleared_message)
 
     df_row = pd.DataFrame({
@@ -86,6 +78,7 @@ async def main():
     })
     df_row.to_csv("data.csv")
     print("done")
+    print('if starts with +11 number is wrong, check it by link')
     print(bad_channels)
 
 
