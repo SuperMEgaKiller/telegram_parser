@@ -60,14 +60,14 @@ async def main():
               
                 unique_numbers = list(set(modified_numbers) - set(config.used_numbers))
               
-                unique_numbers = ' '.join(modified_numbers)
+                numbers_to_str = ' '.join(modified_numbers)
               
-                if (unique_numbers
+                if (numbers_to_str
                         and not any(x in hashtags for x in config.bad_hashtags)):
                     list_of_hashtags.append(hashtags)
                     list_of_messages_link.append(
                         f'{channel_url}/{message_obj.id}')
-                    list_of_numbers.append(unique_numbers)
+                    list_of_numbers.append(numbers_to_str)
                     list_of_messages.append(cleared_message)
 
     df_row = pd.DataFrame({
